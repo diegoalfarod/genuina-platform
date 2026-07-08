@@ -1,0 +1,35 @@
+// Esquema Prisma — Genuina Base (plantilla)
+// Base de datos: Postgres (Neon). DATABASE_URL = conexión pooled, DATABASE_URL_UNPOOLED = directa.
+// Modelo mínimo para arrancar: User + Notification. Sin equivalente a HunterSetting/Lead —
+// se diseñan a la medida cuando exista el primer agente/cliente real de Genuina.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")          // pooled (runtime / Vercel)
+  directUrl = env("DATABASE_URL_UNPOOLED") // directa (migraciones)
+}
+
+model User {
+  id           String   @id @default(cuid())
+  nombre       String
+  email        String   @unique
+  passwordHash String
+  rol          String   @default("ADMIN") // ADMIN | ASESOR (libre, sin enum nativo)
+  createdAt    DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  tipo      String   @default("INFO")
+  titulo    String
+  mensaje   String
+  leido     Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([leido])
+  @@index([createdAt])
+}
