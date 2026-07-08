@@ -1,0 +1,42 @@
+// Esquema Prisma — Genuina Template
+// Base de datos: Postgres (Neon). DATABASE_URL = conexión pooled, DATABASE_URL_UNPOOLED = directa.
+// Modelo mínimo para arrancar: User + Notification. Agrega aquí lo que este cliente
+// necesite — este schema es propio de esta app, no se comparte con ninguna otra.
+
+// output apunta DENTRO de esta app (no al node_modules hoisteado del monorepo) —
+// en un workspace con varias apps, cada una con su propio schema, generar todas al
+// mismo @prisma/client hoisteado hace que la última generación pise a las demás.
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")          // pooled (runtime / Vercel)
+  directUrl = env("DATABASE_URL_UNPOOLED") // directa (migraciones)
+}
+
+model User {
+  id           String   @id @default(cuid())
+  nombre       String
+  email        String   @unique
+  passwordHash String
+  rol          String   @default("ADMIN") // ADMIN | ASESOR (libre, sin enum nativo)
+  createdAt    DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  tipo      String   @default("INFO")
+  titulo    String
+  mensaje   String
+  leido     Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([leido])
+  @@index([createdAt])
+}
+
+// Para un CRM tipo Lead: copia la convención de packages/core/prisma-core.prisma
+// (modelo Lead + LeadEstado/LeadFuente) cuando este cliente lo necesite.

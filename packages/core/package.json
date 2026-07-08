@@ -1,0 +1,8 @@
+{
+  "name": "@genuina/core",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "server-only": "^0.0.1"
+  }
+}

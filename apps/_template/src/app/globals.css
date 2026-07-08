@@ -1,0 +1,13 @@
+@import "@genuina/core/styles/tokens.css";
+
+/* Paleta de marca propia de este cliente: sobreescribe las variables de tema
+   aquí (después del import) si necesita otros colores que la paleta oficial de
+   Genuina (terracota + teal) que trae @genuina/core por defecto. Ejemplo:
+
+   :root {
+     --accent: #tu-color;
+     --accent-2: #tu-color-2;
+     --accent-ink: #tu-color-oscuro-para-texto;
+     --brand: #tu-color-secundario;
+   }
+*/

@@ -1,0 +1,77 @@
+// Esquema Prisma — Genuina Base (plantilla)
+// Base de datos: Postgres (Neon). DATABASE_URL = conexión pooled, DATABASE_URL_UNPOOLED = directa.
+// Modelo mínimo para arrancar: User + Notification + Lead. Sin equivalente a HunterSetting —
+// se diseña a la medida cuando exista el primer agente/cliente real de Genuina.
+
+// output apunta DENTRO de esta app (no al node_modules hoisteado del monorepo) —
+// en un workspace con varias apps, cada una con su propio schema, generar todas al
+// mismo @prisma/client hoisteado hace que la última generación pise a las demás.
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")          // pooled (runtime / Vercel)
+  directUrl = env("DATABASE_URL_UNPOOLED") // directa (migraciones)
+}
+
+model User {
+  id           String   @id @default(cuid())
+  nombre       String
+  email        String   @unique
+  passwordHash String
+  rol          String   @default("ADMIN") // ADMIN | ASESOR (libre, sin enum nativo)
+  createdAt    DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  tipo      String   @default("INFO")
+  titulo    String
+  mensaje   String
+  leido     Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([leido])
+  @@index([createdAt])
+}
+
+enum LeadEstado {
+  nuevo
+  contactado
+  calificado
+  ganado
+  perdido
+}
+
+enum LeadFuente {
+  demo_web // importado desde el funnel de demos de Genuina AI (usagenuina.com)
+  manual
+}
+
+/// Entidad genérica de prospecto — el molde que va a alimentar CUALQUIER producto
+/// futuro de Genuina que genere leads (hoy: import de demos; mañana: el agente de
+/// prospección de Genuina Loop, escalaciones de Genuina Inbox, etc.). Cada fuente
+/// tiene su propio conector (ver src/lib/genuinaAiClient.ts para demo_web) que hace
+/// upsert aquí; estado y notas son SIEMPRE de Diego — un conector nunca los pisa.
+model Lead {
+  id             String     @id @default(cuid())
+  nombre         String
+  email          String
+  telefono       String
+  negocio        String?
+  fuente         LeadFuente @default(manual)
+  estado         LeadEstado @default(nuevo)
+  notas          String?
+  /// businessId en Genuina AI — solo si fuente = demo_web. Permite traer el
+  /// transcript completo bajo demanda sin duplicar el historial de conversación.
+  externalId     String?
+  ultimoContacto DateTime?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  @@unique([email, fuente])
+  @@index([estado])
+}

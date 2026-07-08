@@ -1,71 +1,56 @@
-# Genuina Base
+# genuina-platform
 
-Plantilla base para nuevos dashboards/backoffice de Genuina. Extraída del shell visual
-de MasLux/Radar (dock de navegación, tema claro/oscuro, auth, tab "Equipo" con presencia
-en vivo de agentes) **sin ningún CRM de leads** — lista para configurar un cliente nuevo
-o el propio panel interno de Genuina.
+Monorepo (npm workspaces) para el dashboard interno de Genuina y las apps dedicadas de
+cada cliente que necesite un deployment personalizado.
 
-## Qué trae
+**`packages/core` es el sistema de diseño OFICIAL de Genuina de aquí en adelante**
+(el look glassy extraído de Masluxled/Radar) — no un experimento paralelo al dashboard
+de Genuina AI (usagenuina.com). Ese dashboard actual (Fase 6, look plano/técnico) queda
+obsoleto frente a esta dirección; migrarlo a este sistema de diseño es trabajo futuro
+explícito, no automático — mientras tanto sigue funcionando tal cual está.
 
-- Next.js 15 + React 19 + TypeScript, Tailwind 4 (tokens de diseño en `src/app/globals.css`).
-- Auth casera (cookie firmada HMAC, sin librería externa) — `src/lib/auth.ts`.
-- Prisma + Neon Postgres. Modelo mínimo: `User` + `Notification`.
-- Shell autenticado: header glassy, dock flotante (Inicio · Equipo · Ajustes), tool picker
-  con el roadmap de módulos de Genuina.
-- Tab "Equipo": patrón de presencia en vivo de agentes de IA, roster vacío por defecto
-  ("aún no tienes agentes activos"). Ver `src/components/equipo/` — `Worklog.tsx` y
-  `AgentProfile.tsx` están generalizados y listos para conectar cuando exista el primer
-  agente real (hoy no los usa `EquipoClient.tsx`, que muestra el estado vacío).
-- Página de Ajustes con cambio de contraseña real.
-- **Leads** (`/leads`): entidad `Lead` propia (estado/notas/seguimiento, siempre tuyo) que
-  cualquier producto futuro puede alimentar — hoy, un conector importa los demos de
-  usagenuina.com (Genuina AI) vía conexión de **solo lectura** a esa base (rol Postgres
-  `genuina_dashboard_ro`, sin permisos de escritura ni de lectura de tablas — solo puede
-  ejecutar un puñado de funciones `SECURITY DEFINER`). Ver `src/lib/genuinaAiClient.ts`.
-  Esto es, en la práctica, el arranque de **Genuina Loop**: cuando exista un agente de
-  prospección real, se le agrega su propio `LeadFuente` + su propio conector — la tabla,
-  el pipeline de estados y la UI de detalle no cambian.
+## Estructura
 
-## Qué NO trae (a propósito)
+```
+packages/
+  core/               → @genuina/core: dock, íconos, auth HMAC, tokens de diseño,
+                        patrón "Equipo", convención Lead. Ver packages/core/README.md.
+apps/
+  genuina-dashboard/  → panel interno de Genuina (incluye el módulo de Leads).
+  _template/          → punto de partida para el próximo cliente dedicado (clónalo).
+```
 
-Ningún cron, ninguna integración de IA todavía. Ver el documento de especificación
-original en el repo de Masluxled (`docs/GENUINA_TEMPLATE_SPEC.md`) para el catálogo
-completo de qué se dejó fuera y por qué.
+Cada app tiene su propia base de datos Neon, sus propias migraciones y su propio
+deployment de Vercel — nunca se comparten datos entre apps, solo el chrome visual de
+`packages/core`.
 
 ## Empezar
 
 ```bash
-npm install
-cp .env.example .env   # rellena DATABASE_URL / DATABASE_URL_UNPOOLED / AUTH_SECRET (Neon)
+npm install                          # instala todo el workspace desde la raíz
+cd apps/genuina-dashboard             # o apps/_template, o apps/<cliente>
+cp .env.example .env
 npx prisma migrate dev --name init
-npm run db:seed         # crea admin@genuina.local / genuina
+npm run db:seed
 npm run dev
 ```
 
-### Conectar el módulo de Leads a Genuina AI
+## Crear un cliente nuevo
 
-`GENUINA_AI_DATABASE_URL` ya está en tu `.env` local (generada en la sesión que creó este
-módulo — connection string del rol de solo lectura `genuina_dashboard_ro` sobre la base de
-Genuina AI). Verificado funcionalmente: puede ejecutar `app_admin_leads`/`app_demo_history`,
-NO puede leer ni escribir ninguna tabla directo (permission denied confirmado). Si rotas ese
-password algún día, hazlo en la base de Genuina AI y actualiza esta env — nunca se comparte
-por chat.
+1. Copia `apps/_template/` a `apps/<cliente>/`, renombra `package.json` (`name`).
+2. Proyecto Neon propio → `.env` propio → `prisma migrate dev`.
+3. Proyecto de Vercel propio con root directory = `apps/<cliente>`.
+4. Personaliza libremente dentro de esa carpeta — nunca edites `packages/core` para
+   algo que solo necesita un cliente; ese paquete solo crece cuando algo se repite en
+   2+ apps.
+5. Paleta de marca: `packages/core/styles/tokens.css` trae la paleta oficial de Genuina
+   (terracota + teal) por defecto — sobreescribe `--accent`/`--accent-2`/`--accent-ink`/
+   `--brand` en el `globals.css` de la nueva app después de importar los tokens del core
+   si este cliente necesita otra paleta.
 
-## Paleta de marca
+## Masluxled
 
-`src/app/globals.css` tiene la paleta de MasLux (ámbar + azul marino) como **placeholder**
-— reemplaza `--accent`/`--accent-2`/`--accent-ink`/`--brand` (tema claro y oscuro) por la
-paleta real de Genuina cuando esté definida. El resto del sistema (`.glass`, `.card`,
-`.btn`, `.dock`, animaciones) no cambia.
-
-## Logo
-
-`(app)/layout.tsx` y `login/page.tsx` usan un wordmark de texto ("Genuina") en vez de una
-imagen — coloca tu logo en `public/logo.png` y reemplaza el `<span>` por un `<img>` cuando
-tengas el asset real.
-
-## Siguiente cliente / producto
-
-Para configurar un nuevo cliente: clona este repo, ajusta `package.json` (`name`),
-paleta, y arranca desde aquí. No reutilices esta misma instancia/base de datos entre
-clientes — cada uno con su propio repo + proyecto Vercel + base Neon.
+Sigue viviendo en su propio repo, en producción para el primo de Diego — no forma parte
+de este monorepo todavía. Su migración a `apps/masluxled/` (reemplazando su copia local
+de dock/auth/tokens por imports de `@genuina/core`) es una etapa deliberada y posterior,
+con ventana de mantenimiento explícita, no automática.

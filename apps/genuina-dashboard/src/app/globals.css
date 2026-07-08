@@ -1,0 +1,5 @@
+@import "@genuina/core/styles/tokens.css";
+
+/* Usa la paleta oficial de Genuina tal cual viene de @genuina/core (terracota +
+   teal) — sin overrides aquí. Este es el dashboard interno de Genuina, no un
+   cliente con marca propia. */

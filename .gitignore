@@ -1,14 +1,14 @@
-# dependencies
-/node_modules
-/.pnp
+# dependencies (monorepo: puede haber node_modules por workspace, no solo en la raíz)
+node_modules/
+.pnp
 .pnp.js
 
 # next.js
-/.next/
-/out/
+.next/
+out/
 
 # production
-/build
+build/
 
 # misc
 .DS_Store
@@ -26,5 +26,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# cliente Prisma generado por app (ver output en cada schema.prisma) — build artifact
+# ** al inicio: sin esto, un patrón con "/" en medio queda anclado a la raíz del repo
+# y no ignora apps/<app>/src/generated/ (solo <root>/src/generated/).
+**/src/generated/
 
 .vercel

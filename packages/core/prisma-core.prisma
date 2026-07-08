@@ -1,0 +1,59 @@
+// Referencia, NO ejecutable — Prisma no permite compartir modelos entre datasources
+// distintos. Cada app nueva copia esto a su propio prisma/schema.prisma como punto
+// de partida y lo evoluciona por su cuenta; no hay sincronización automática.
+
+model User {
+  id           String   @id @default(cuid())
+  nombre       String
+  email        String   @unique
+  passwordHash String
+  rol          String   @default("ADMIN")
+  createdAt    DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  tipo      String   @default("INFO")
+  titulo    String
+  mensaje   String
+  leido     Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([leido])
+  @@index([createdAt])
+}
+
+// Convención "Lead" — molde para cualquier producto que alimente prospectos
+// (import de demos, un futuro agente de prospección, escalaciones, etc.). Cada
+// fuente hace upsert por [email, fuente]; el estado/notas nunca se pisan en un
+// re-sync. Ver Genuina Base → src/app/(app)/leads/ para la implementación de referencia.
+enum LeadEstado {
+  nuevo
+  contactado
+  calificado
+  ganado
+  perdido
+}
+
+enum LeadFuente {
+  demo_web
+  manual
+}
+
+model Lead {
+  id             String     @id @default(cuid())
+  nombre         String
+  email          String
+  telefono       String
+  negocio        String?
+  fuente         LeadFuente @default(manual)
+  estado         LeadEstado @default(nuevo)
+  notas          String?
+  externalId     String?
+  ultimoContacto DateTime?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  @@unique([email, fuente])
+  @@index([estado])
+}
