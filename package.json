@@ -15,6 +15,7 @@
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^0.10.4",
     "@prisma/client": "^6.2.1",
     "bcryptjs": "^2.4.3",
     "next": "^15.5.20",

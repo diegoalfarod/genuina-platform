@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   IconDashboard,
+  IconTarget,
   IconTeam,
   IconSettings,
   IconPlus,
@@ -13,6 +14,7 @@ import { ToolPicker } from "./ToolPicker";
 
 const ITEMS = [
   { href: "/", label: "Inicio", Icon: IconDashboard },
+  { href: "/leads", label: "Leads", Icon: IconTarget },
   { href: "/equipo", label: "Equipo", Icon: IconTeam },
   { href: "/ajustes", label: "Ajustes", Icon: IconSettings },
 ] as const;
